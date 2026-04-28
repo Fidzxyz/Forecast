@@ -1,0 +1,32 @@
+{
+  "name": "forecast",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Forecast — prediction markets native to Farcaster. Far·caster → Fore·cast.",
+  "scripts": {
+    "dev": "next dev -p 3000",
+    "build": "next build",
+    "start": "next start -p 3000",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@farcaster/miniapp-sdk": "^0.3.0",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.454.0",
+    "next": "^15.5.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "tailwind-merge": "^2.5.5"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.0.0",
+    "@types/node": "^22.9.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "eslint": "^9.15.0",
+    "eslint-config-next": "^15.5.0",
+    "tailwindcss": "^4.0.0",
+    "typescript": "^5.6.3"
+  }
+}
