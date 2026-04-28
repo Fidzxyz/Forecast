@@ -7,13 +7,12 @@ const DATA_FILE = path.join(process.cwd(), "data", "store.json");
 
 interface DB {
   markets: Record<string, Market>;
-  // forecasts keyed by marketId, then by fid (one forecast per user per market — last write wins)
+  // forecasts keyed by marketId, then by fid (one forecast per user per market)
   forecasts: Record<string, Record<number, Forecast>>;
 }
 
 const empty: DB = { markets: {}, forecasts: {} };
 
-// globalThis cache so HMR / serverless instance reuse share the same in-memory db.
 declare global {
   // eslint-disable-next-line no-var
   var __forecastDB: DB | undefined;
@@ -21,23 +20,68 @@ declare global {
   var __forecastLoaded: boolean | undefined;
 }
 
+function seedDefaults(db: DB) {
+  const now = Date.now();
+  const day = 86_400_000;
+  const list: Market[] = [
+    {
+      id: "btc-100k-eoy",
+      question: "Will BTC close above $100k on Dec 31?",
+      description: "Resolves YES if Coinbase BTC-USD spot >= $100,000 at 23:59 UTC, Dec 31.",
+      category: "Crypto",
+      createdAt: now - 2 * day,
+      closesAt: now + 60 * day,
+      status: "open",
+      creator: { fid: 3, username: "dwr.eth", displayName: "Dan Romero" },
+    },
+    {
+      id: "fc-1m-daus",
+      question: "Will Farcaster hit 1M DAUs before July?",
+      description: "Resolves based on @dwr.eth's official monthly stats post.",
+      category: "Farcaster",
+      createdAt: now - 1 * day,
+      closesAt: now + 90 * day,
+      status: "open",
+      creator: { fid: 2, username: "v", displayName: "Varun" },
+    },
+    {
+      id: "ai-agi-2026",
+      question: "Will a major lab declare AGI by end of 2026?",
+      description: "Public announcement from OpenAI / Anthropic / DeepMind / Meta / xAI.",
+      category: "AI",
+      createdAt: now - 3 * day,
+      closesAt: now + 365 * day,
+      status: "open",
+      creator: { fid: 1, username: "balajis.eth", displayName: "Balaji" },
+    },
+  ];
+  for (const m of list) {
+    db.markets[m.id] = m;
+    db.forecasts[m.id] ||= {};
+  }
+}
+
 async function ensureLoaded(): Promise<DB> {
   if (globalThis.__forecastDB && globalThis.__forecastLoaded) return globalThis.__forecastDB;
   globalThis.__forecastDB ||= structuredClone(empty);
+  // Try to load from local disk (works in dev / long-running servers; fails silently on Vercel serverless).
   try {
     const raw = await fs.readFile(DATA_FILE, "utf8");
-    const parsed = JSON.parse(raw) as DB;
-    globalThis.__forecastDB = parsed;
+    globalThis.__forecastDB = JSON.parse(raw) as DB;
   } catch {
-    // first run, no file yet
+    // first run on this instance, no file yet
   }
   globalThis.__forecastLoaded = true;
+  // Auto-seed default markets so every new serverless container has demo data.
+  if (Object.keys(globalThis.__forecastDB!.markets).length === 0) {
+    seedDefaults(globalThis.__forecastDB!);
+  }
   return globalThis.__forecastDB!;
 }
 
 async function persist(db: DB): Promise<void> {
-  // Best-effort persistence. On read-only filesystems (Vercel serverless),
-  // writes silently fail and we keep operating from globalThis cache.
+  // Best-effort. On read-only filesystems (Vercel serverless), this fails silently
+  // and we keep operating from the globalThis in-memory cache.
   try {
     await fs.mkdir(path.dirname(DATA_FILE), { recursive: true });
     await fs.writeFile(DATA_FILE, JSON.stringify(db, null, 2));
@@ -72,7 +116,6 @@ export async function updateMarket(id: string, patch: Partial<Market>): Promise<
   if (!existing) return null;
   const updated = { ...existing, ...patch };
   db.markets[id] = updated;
-  // If resolving, compute Brier scores for all forecasts on this market
   if (patch.status === "resolved" && patch.resolution) {
     const list = Object.values(db.forecasts[id] ?? {});
     const scored = applyResolution(updated, list);
@@ -114,43 +157,7 @@ export async function upsertForecast(forecast: Forecast): Promise<Forecast> {
   return forecast;
 }
 
-/** Seed data shown on first launch so the app feels alive. */
+/** Public alias kept for compatibility — seeding now happens automatically inside ensureLoaded. */
 export async function ensureSeed(): Promise<void> {
-  const db = await ensureLoaded();
-  if (Object.keys(db.markets).length > 0) return;
-  const now = Date.now();
-  const day = 86_400_000;
-  const seedMarkets: Market[] = [
-    {
-      id: "btc-100k-eoy",
-      question: "Will BTC close above $100k on Dec 31?",
-      description: "Resolves YES if Coinbase BTC-USD spot >= $100,000 at 23:59 UTC, Dec 31.",
-      category: "Crypto",
-      createdAt: now - 2 * day,
-      closesAt: now + 60 * day,
-      status: "open",
-      creator: { fid: 3, username: "dwr.eth", displayName: "Dan Romero" },
-    },
-    {
-      id: "fc-1m-daus",
-      question: "Will Farcaster hit 1M DAUs before July?",
-      description: "Resolves based on @dwr.eth's official monthly stats post.",
-      category: "Farcaster",
-      createdAt: now - 1 * day,
-      closesAt: now + 90 * day,
-      status: "open",
-      creator: { fid: 2, username: "v", displayName: "Varun" },
-    },
-    {
-      id: "ai-agi-2026",
-      question: "Will a major lab declare AGI by end of 2026?",
-      description: "Public announcement from OpenAI / Anthropic / DeepMind / Meta / xAI.",
-      category: "AI",
-      createdAt: now - 3 * day,
-      closesAt: now + 365 * day,
-      status: "open",
-      creator: { fid: 1, username: "balajis.eth", displayName: "Balaji" },
-    },
-  ];
-  for (const m of seedMarkets) await createMarket(m);
+  await ensureLoaded();
 }
