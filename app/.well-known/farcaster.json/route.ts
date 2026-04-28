@@ -6,19 +6,28 @@ export const dynamic = "force-dynamic";
 /**
  * Mini App manifest. Spec: https://miniapps.farcaster.xyz/docs/specification#manifest
  *
- * Field length limits enforced by Farcaster:
- *   - name:        max 32 chars
- *   - subtitle:    max 30 chars
- *   - description: max 170 chars
- *   - tags:        max 5 entries, each max 20 chars (lowercase, no spaces)
+ * accountAssociation values are PUBLIC by design — they're cryptographic proof that
+ * the FID 301313 custody address (0x39F3bb4Dc08E40D4d0039E137634ce223B70CC9b) approved
+ * this domain. Knowing them lets anyone verify, but never impersonate, the owner.
  *
- * To publish on Farcaster, you must sign this manifest with your custody address.
- * Generate the accountAssociation values at:
- *   https://farcaster.xyz/~/developers/mini-apps/manifest
- * Then set FARCASTER_HEADER / FARCASTER_PAYLOAD / FARCASTER_SIGNATURE in env.
+ * Generated via: https://farcaster.xyz/~/developers/mini-apps/manifest
+ * Bound domain: forecast-puce-nine.vercel.app
+ *
+ * Env vars (FARCASTER_HEADER / FARCASTER_PAYLOAD / FARCASTER_SIGNATURE) take precedence
+ * if set — useful when re-binding to a custom domain later.
  */
+
+const SIGNED_ACCOUNT_ASSOCIATION = {
+  header:
+    "eyJmaWQiOjMwMTMxMywidHlwZSI6ImF1dGgiLCJrZXkiOiIweDM5RjNiYjREYzA4RTQwRDRkMDAzOUUxMzc2MzRjZTIyM0I3MENDOWIifQ",
+  payload: "eyJkb21haW4iOiJmb3JlY2FzdC1wdWNlLW5pbmUudmVyY2VsLmFwcCJ9",
+  signature:
+    "t8EquMIDeiXE8hyQ/OC+/k+bXAx4vt9AcefZInDaw1MLbHJM4HStlZsrgW9oRoD3Y3sOJuZPFUo6yBEVm51w1hw=",
+};
+
 export async function GET() {
   const url = baseUrl();
+
   const accountAssociation =
     process.env.FARCASTER_HEADER &&
     process.env.FARCASTER_PAYLOAD &&
@@ -28,7 +37,7 @@ export async function GET() {
           payload: process.env.FARCASTER_PAYLOAD,
           signature: process.env.FARCASTER_SIGNATURE,
         }
-      : undefined;
+      : SIGNED_ACCOUNT_ASSOCIATION;
 
   return NextResponse.json({
     accountAssociation,
