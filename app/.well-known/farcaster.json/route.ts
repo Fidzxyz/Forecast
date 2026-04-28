@@ -6,6 +6,12 @@ export const dynamic = "force-dynamic";
 /**
  * Mini App manifest. Spec: https://miniapps.farcaster.xyz/docs/specification#manifest
  *
+ * Field length limits enforced by Farcaster:
+ *   - name:        max 32 chars
+ *   - subtitle:    max 30 chars
+ *   - description: max 170 chars
+ *   - tags:        max 5 entries, each max 20 chars (lowercase, no spaces)
+ *
  * To publish on Farcaster, you must sign this manifest with your custody address.
  * Generate the accountAssociation values at:
  *   https://farcaster.xyz/~/developers/mini-apps/manifest
@@ -35,12 +41,11 @@ export async function GET() {
       buttonTitle: "Open Forecast",
       splashImageUrl: `${url}/icon.png`,
       splashBackgroundColor: "#0b0b12",
-      subtitle: "Prediction markets, native to Farcaster",
+      subtitle: "Put a number on it.",
       description:
-        "Far·caster → Fore·cast. Make calibrated predictions on casts. Track your Brier score. Climb the leaderboard for being right, not loud.",
+        "Prediction markets, native to Farcaster. Forecast on casts, earn a Brier score, climb the leaderboard.",
       primaryCategory: "finance",
-      tags: ["predictions", "markets", "calibration", "social"],
-      // webhookUrl: `${url}/api/webhook`, // enable if you implement notifications
+      tags: ["predictions", "markets", "brier", "social"],
     },
   });
 }
