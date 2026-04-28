@@ -6,11 +6,13 @@ import { getMarket, listForecasts } from "@/lib/store";
 import { consensus } from "@/lib/brier";
 import { ForecastSubmit } from "@/components/ForecastSubmit";
 import { ResolveButton } from "@/components/ResolveButton";
+import { LiveActivity } from "@/components/LiveActivity";
 import { MiniAppReady } from "@/app/providers";
 import { formatPercent, formatTimeLeft, baseUrl } from "@/lib/utils";
 import { marketEmbed } from "@/lib/embed";
 
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -89,7 +91,6 @@ export default async function MarketPage({ params }: PageProps) {
         </div>
       </article>
 
-      {/* Forecast form / outcome */}
       <section className="mt-4">
         {market.status === "resolved" ? (
           <ResolvedBanner resolution={market.resolution!} />
@@ -100,57 +101,16 @@ export default async function MarketPage({ params }: PageProps) {
         )}
       </section>
 
-      {/* Resolve (creator only — best-effort UX) */}
       {market.status === "open" && closed && (
         <section className="mt-4">
           <ResolveButton marketId={market.id} creatorFid={market.creator.fid} />
         </section>
       )}
 
-      {/* Recent forecasts */}
-      {forecasts.length > 0 && (
-        <section className="mt-8">
-          <h2 className="mb-3 text-sm font-bold uppercase tracking-widest text-[var(--color-text-dim)]">
-            Recent forecasts
-          </h2>
-          <div className="space-y-2">
-            {forecasts.slice(0, 20).map((f) => (
-              <div
-                key={f.id}
-                className="flex items-center justify-between rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-elev)] px-4 py-3 text-sm"
-              >
-                <div className="flex items-center gap-2 truncate">
-                  {f.user.pfpUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={f.user.pfpUrl} alt="" className="h-6 w-6 rounded-full" />
-                  ) : (
-                    <div className="h-6 w-6 rounded-full bg-[var(--color-accent)]/30" />
-                  )}
-                  <span className="truncate font-medium">
-                    {f.user.username ?? f.user.displayName ?? `fid:${f.user.fid}`}
-                  </span>
-                </div>
-                <div className="flex items-center gap-3">
-                  {f.brierScore !== undefined && (
-                    <span className="text-xs text-[var(--color-text-dim)]">
-                      brier {f.brierScore.toFixed(3)}
-                    </span>
-                  )}
-                  <span
-                    className={
-                      f.probability > 0.5
-                        ? "font-bold text-[var(--color-yes)]"
-                        : "font-bold text-[var(--color-no)]"
-                    }
-                  >
-                    {formatPercent(f.probability)}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
+      {/* Live activity feed — polls every 5s, animates new forecasts in */}
+      <section className="mt-8">
+        <LiveActivity marketId={market.id} initial={forecasts} />
+      </section>
     </main>
   );
 }

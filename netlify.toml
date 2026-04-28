@@ -1,0 +1,16 @@
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  NEXT_PUBLIC_URL = "https://forecast-fc.netlify.app"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+# Mini App manifest needs to be served as JSON
+[[headers]]
+  for = "/.well-known/farcaster.json"
+  [headers.values]
+    Content-Type = "application/json"
+    Cache-Control = "public, max-age=300"
