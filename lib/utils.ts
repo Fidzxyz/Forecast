@@ -23,6 +23,26 @@ export function shortFid(fid: number): string {
   return `fid:${fid}`;
 }
 
+/**
+ * Resolves the public origin of this deployment.
+ * Order of precedence:
+ *   1. NEXT_PUBLIC_URL — explicit override (use this for custom domains)
+ *   2. VERCEL_PROJECT_PRODUCTION_URL — set by Vercel for the prod alias
+ *   3. VERCEL_URL — set by Vercel per-deployment (preview / branch URLs)
+ *   4. localhost fallback for local dev
+ *
+ * On Vercel this means a fresh import → click Deploy → it just works,
+ * even before you set NEXT_PUBLIC_URL manually.
+ */
 export function baseUrl(): string {
-  return process.env.NEXT_PUBLIC_URL?.replace(/\/$/, "") || "http://localhost:3000";
+  const explicit = process.env.NEXT_PUBLIC_URL?.replace(/\/$/, "");
+  if (explicit) return explicit;
+
+  const prodAlias = process.env.VERCEL_PROJECT_PRODUCTION_URL;
+  if (prodAlias) return `https://${prodAlias}`;
+
+  const deploymentUrl = process.env.VERCEL_URL;
+  if (deploymentUrl) return `https://${deploymentUrl}`;
+
+  return "http://localhost:3000";
 }
