@@ -64,10 +64,10 @@ export async function GET(request: Request) {
               }}
             />
             <div style={{ display: "flex", flexDirection: "column" }}>
-              <div style={{ fontSize: 38, fontWeight: 900, letterSpacing: -1 }}>
+              <div style={{ fontSize: 38, fontWeight: 900, letterSpacing: -1, display: "flex" }}>
                 Forecast
               </div>
-              <div style={{ fontSize: 18, color: "#9b9bb0" }}>
+              <div style={{ fontSize: 18, color: "#9b9bb0", display: "flex" }}>
                 snap mode
               </div>
             </div>
@@ -99,7 +99,7 @@ export async function GET(request: Request) {
             marginBottom: 28,
           }}
         >
-          <div style={{ fontSize: 96, lineHeight: 1 }}>{emoji}</div>
+          <div style={{ fontSize: 96, lineHeight: 1, display: "flex" }}>{emoji}</div>
           <div
             style={{
               fontSize: question.length > 80 ? 48 : 60,
@@ -134,6 +134,7 @@ export async function GET(request: Request) {
                   letterSpacing: 3,
                   color: "#9b9bb0",
                   marginBottom: 4,
+                  display: "flex",
                 }}
               >
                 {parsed.byUsername ? `@${parsed.byUsername} says` : "snap says"}
@@ -153,9 +154,10 @@ export async function GET(request: Request) {
                     lineHeight: 1,
                     letterSpacing: -6,
                     fontVariantNumeric: "tabular-nums",
+                    display: "flex",
                   }}
                 >
-                  {p}%
+                  {`${p}%`}
                 </div>
                 <div
                   style={{
@@ -163,6 +165,7 @@ export async function GET(request: Request) {
                     fontWeight: 900,
                     color: tint,
                     letterSpacing: -1,
+                    display: "flex",
                   }}
                 >
                   {verdict}
@@ -178,6 +181,7 @@ export async function GET(request: Request) {
                   letterSpacing: 3,
                   color: "#9b9bb0",
                   marginBottom: 8,
+                  display: "flex",
                 }}
               >
                 tap to lock your %
