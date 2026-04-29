@@ -69,20 +69,21 @@ export function SnapComposer({
       absolute: true,
     });
     const verdict = stance(prob);
-    const lead =
+    const q = topic?.question ?? customQuestion ?? "Hot take";
+    const headline =
       verdict === "YES"
-        ? `My snap: ${prob}% YES.`
+        ? `My snap: ${prob}% YES`
         : verdict === "NO"
-        ? `My snap: ${prob}% NO.`
-        : `My snap: ${prob}% — pure coinflip.`;
-    const text = byUsername
-      ? `${lead}\n\nbeat @${byUsername} on this one →`
-      : `${lead}\n\nbeat my forecast →`;
+        ? `My snap: ${prob}% NO`
+        : `My snap: ${prob}% — coinflip`;
+    // URL embedded in body so Warpcast clients that ignore SDK `embeds` UI
+    // still surface the snap card via URL embed detection.
+    const text = `${topic?.emoji ?? "🎯"} ${q}\n\n${headline}.\n\nbeat me 👇\n${url}`;
     try {
       await sdk.actions.composeCast({ text, embeds: [url] });
     } catch {
       try {
-        await navigator.clipboard.writeText(`${text}\n${url}`);
+        await navigator.clipboard.writeText(text);
         setShareError("copied to clipboard");
       } catch {
         setShareError("open in Warpcast to share");
